@@ -1,0 +1,159 @@
+{
+    "sortie_bosses": {
+        "minor_nms": [
+            {
+                "sector": "A",
+                "nm": "Abject Obdella",
+                "gallimaufry": 195
+            },
+            {
+                "sector": "B",
+                "nm": "Biune Porxie",
+                "gallimaufry": 255
+            },
+            {
+                "sector": "C",
+                "nm": "Cachaemic Bhoot",
+                "gallimaufry": 315
+            },
+            {
+                "sector": "D",
+                "nm": "Demisang Deleterious",
+                "gallimaufry": 375
+            },
+            {
+                "sector": "E",
+                "nm": "Esurient Botulus",
+                "gallimaufry": 435
+            },
+            {
+                "sector": "F",
+                "nm": "Fetid Ixion",
+                "gallimaufry": 450
+            },
+            {
+                "sector": "G",
+                "nm": "Gyvewrapped Naraka",
+                "gallimaufry": 465
+            },
+            {
+                "sector": "H",
+                "nm": "Haughty Tulittia",
+                "gallimaufry": 480
+            }
+        ],
+        "major_nms": [
+            {
+                "sector": "A",
+                "nm": "Ghatjot",
+                "gallimaufry": 2000,
+                "shard": "Ra'Kaznar Shard E G",
+                "rewards": [
+                    "2,000 Gallimaufry G",
+                    "Ra'Kaz. Sapphire VC",
+                    "Eikondrite VC",
+                    "Old Case C",
+                    "Old Case +1 R"
+                ]
+            },
+            {
+                "sector": "B",
+                "nm": "Leshonn",
+                "gallimaufry": 2000,
+                "shard": "Ra'Kaznar Shard F G",
+                "rewards": [
+                    "2,000 Gallimaufry G",
+                    "Ra'Kaz. Sapphire VC",
+                    "Eikondrite VC",
+                    "Old Case C",
+                    "Old Case +1 R"
+                ]
+            },
+            {
+                "sector": "C",
+                "nm": "Skomora",
+                "gallimaufry": 2000,
+                "shard": "Ra'Kaznar Shard G G",
+                "rewards": [
+                    "2,000 Gallimaufry G",
+                    "Ra'Kaz. Sapphire VC",
+                    "Eikondrite VC",
+                    "Old Case C",
+                    "Old Case +1 R"
+                ]
+            },
+            {
+                "sector": "D",
+                "nm": "Degei",
+                "gallimaufry": 2000,
+                "shard": "Ra'Kaznar Shard H G",
+                "rewards": [
+                    "2,000 Gallimaufry G",
+                    "Ra'Kaz. Sapphire VC",
+                    "Eikondrite VC",
+                    "Old Case C",
+                    "Old Case +1 R"
+                ]
+            },
+            {
+                "sector": "E",
+                "nm": "Dhartok",
+                "gallimaufry": 10000,
+                "shard": "Ra'Kaznar Frag. 1 G",
+                "rewards": [
+                    "10,000 Gallimaufry G",
+                    "Ra'Kaz. Starstone U",
+                    "Old Case C",
+                    "Old Case +1 R"
+                ]
+            },
+            {
+                "sector": "F",
+                "nm": "Gartell",
+                "gallimaufry": 10000,
+                "shard": "Ra'Kaznar Frag. 2 G",
+                "rewards": [
+                    "10,000 Gallimaufry G",
+                    "Ra'Kaz. Starstone U",
+                    "Old Case C",
+                    "Old Case +1 R"
+                ]
+            },
+            {
+                "sector": "G",
+                "nm": "Triboulex",
+                "gallimaufry": 10000,
+                "shard": "Ra'Kaznar Frag. 3 G",
+                "rewards": [
+                    "10,000 Gallimaufry G",
+                    "Ra'Kaz. Starstone U",
+                    "Old Case C",
+                    "Old Case +1 R"
+                ]
+            },
+            {
+                "sector": "H",
+                "nm": "Aita",
+                "gallimaufry": 10000,
+                "shard": "Ra'Kaznar Frag. 4 G",
+                "rewards": [
+                    "10,000 Gallimaufry G",
+                    "Ra'Kaz. Starstone U",
+                    "Old Case C",
+                    "Old Case +1 R"
+                ]
+            },
+            {
+                "sector": "E",
+                "nm": "Aminon",
+                "gallimaufry": 30000,
+                "shard": null,
+                "rewards": [
+                    "30,000 Gallimaufry G",
+                    "Ra'Kaz. Starstone G",
+                    "Old Case +1 G"
+                ]
+            }
+        ]
+    }
+}
