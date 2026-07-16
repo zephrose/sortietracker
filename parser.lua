@@ -44,6 +44,14 @@ local add_effect_messages = {
     [769]=true, [770]=true
 }
 
+local skillchain_messages = {
+    [288]=true, [289]=true, [290]=true, [291]=true, [292]=true, [293]=true, [294]=true, [295]=true,
+    [296]=true, [297]=true, [298]=true, [299]=true, [300]=true, [301]=true, [302]=true, [385]=true,
+    [386]=true, [387]=true, [388]=true, [389]=true, [390]=true, [391]=true, [392]=true, [393]=true,
+    [394]=true, [395]=true, [396]=true, [397]=true, [398]=true, [732]=true, [767]=true, [768]=true,
+    [769]=true, [770]=true
+}
+
 local add_effect_valid = {
     [1] = true, [2] = true, [3] = true, [4] = true, [11] = true, [13] = true
 }
@@ -84,9 +92,9 @@ local function get_player_info(id)
     }
 end
 
-local function record_damage(player_name, damage, is_ws)
+local function record_damage(player_name, damage, is_ws, is_sc)
     if not damage_data.players[player_name] then
-        damage_data.players[player_name] = { damage = 0, hits = 0, misses = 0, ws_damage = 0, ws_count = 0 }
+        damage_data.players[player_name] = { damage = 0, hits = 0, misses = 0, ws_damage = 0, ws_count = 0, sc_damage = 0 }
     end
     if damage > 0 then
         damage_data.players[player_name].damage = damage_data.players[player_name].damage + damage
@@ -95,6 +103,9 @@ local function record_damage(player_name, damage, is_ws)
         if is_ws then
             damage_data.players[player_name].ws_damage = damage_data.players[player_name].ws_damage + damage
             damage_data.players[player_name].ws_count = damage_data.players[player_name].ws_count + 1
+        end
+        if is_sc then
+            damage_data.players[player_name].sc_damage = damage_data.players[player_name].sc_damage + damage
         end
     end
 end
@@ -137,7 +148,8 @@ windower.register_event('action', function(act)
                     end
                     
                     if m.has_add_effect and add_effect_messages[m.add_effect_message] and add_effect_valid[act.category] then
-                        record_damage(display_name, m.add_effect_param, false)
+                        local is_sc = skillchain_messages[m.add_effect_message] or false
+                        record_damage(display_name, m.add_effect_param, false, is_sc)
                     end
                 end
             end

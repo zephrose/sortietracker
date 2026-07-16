@@ -64,6 +64,16 @@ local function send_to_discord(message)
     end
 end
 
+local function render_sector(name, sector, max_ch, max_ca, max_co)
+    local ch_str = ""
+    for i=1, max_ch do if sector.Ch >= i then ch_str = ch_str .. "X " else ch_str = ch_str .. "- " end end
+    local ca_str = ""
+    for i=1, max_ca do if sector.Ca >= i then ca_str = ca_str .. "X " else ca_str = ca_str .. "- " end end
+    local co_str = ""
+    for i=1, max_co do if sector.Co >= i then co_str = co_str .. "X " else co_str = co_str .. "- " end end
+    return string.format("%s[Ch %s|Ca %s|Co %s]", name, ch_str, ca_str, co_str)
+end
+
 function report.generate(additional_note, push_to_discord)
     local state = tracker.get_state()
     local total_galli = currency.display_values()
@@ -83,21 +93,25 @@ function report.generate(additional_note, push_to_discord)
         table.insert(lines, "-----------------------------")
     end
 
-    if #state.chests_opened > 0 then
-        table.insert(lines, "[Chests & Coffers]")
-        for _, c in ipairs(state.chests_opened) do
-            table.insert(lines, string.format("%s - %s", c.time, c.name))
-        end
-        table.insert(lines, "-----------------------------")
-    end
-
-    if state.temp_items and #state.temp_items > 0 then
-        table.insert(lines, "[Temp Items]")
-        for _, t in ipairs(state.temp_items) do
-            table.insert(lines, string.format("%s - %s", t.time, t.name))
-        end
-        table.insert(lines, "-----------------------------")
-    end
+    table.insert(lines, "[ == Objectives == ]")
+    table.insert(lines, render_sector("A", state.sectors.A, 5, 2, 1))
+    table.insert(lines, render_sector("B", state.sectors.B, 5, 2, 1))
+    table.insert(lines, render_sector("C", state.sectors.C, 5, 2, 1))
+    table.insert(lines, render_sector("D", state.sectors.D, 5, 2, 1))
+    table.insert(lines, render_sector("E", state.sectors.E, 1, 2, 1))
+    table.insert(lines, render_sector("F", state.sectors.F, 1, 2, 1))
+    table.insert(lines, render_sector("G", state.sectors.G, 1, 2, 1))
+    table.insert(lines, render_sector("H", state.sectors.H, 1, 2, 1))
+    table.insert(lines, "Ground Aurum: " .. (state.other["Ground Aurum"] or 0))
+    table.insert(lines, "Basement Aurum: " .. (state.other["Basement Aurum"] or 0))
+    table.insert(lines, "G Seal: " .. (state.other["G Seal"] or 0))
+    table.insert(lines, "-----------------------------")
+    
+    table.insert(lines, "[ Cases ]")
+    table.insert(lines, "Old Case: " .. (state.cases["Old Case"] or 0))
+    table.insert(lines, "Old Case +1: " .. (state.cases["Old Case +1"] or 0))
+    table.insert(lines, "Old Case +2: " .. (state.cases["Old Case +2"] or 0))
+    table.insert(lines, "-----------------------------")
 
     table.insert(lines, "[ Sortie Performance ]")
     table.insert(lines, string.format("%-14s %-10s %-7s %-7s %-8s", "Player", "Damage", "Dmg %", "Acc %", "WS Avg"))
@@ -123,6 +137,17 @@ function report.generate(additional_note, push_to_discord)
             end
 
             table.insert(lines, string.format("%-14s %-10s %-7.1f %-7.1f %-8s", string.sub(p.name, 1, 13), comma_value(p.dmg), pct, acc_pct, comma_value(ws_avg)))
+        end
+        
+        local sc_strings = {}
+        for i, p in ipairs(sorted_players) do
+            local sc_dmg = p_data.players[p.name].sc_damage or 0
+            if sc_dmg > 0 then
+                table.insert(sc_strings, string.format("%s-%s", string.sub(p.name, 1, 4), comma_value(sc_dmg)))
+            end
+        end
+        if #sc_strings > 0 then
+            table.insert(lines, "Skillchains: " .. table.concat(sc_strings, ", "))
         end
     else
         table.insert(lines, "No combat data.")
