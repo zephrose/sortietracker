@@ -1,6 +1,7 @@
 _addon.name = 'SortieTracker'
 _addon.author = 'gnovi'
 _addon.version = '1.0'
+_addon.command = 'sortietracker'
 _addon.commands = {'sortietracker', 'st'}
 
 require('chat')
@@ -30,16 +31,20 @@ local update_loop = function()
 end
 coroutine.schedule(update_loop, 1)
 
+local function print_help()
+    windower.add_to_chat(207, '[SortieTracker] Commands:')
+    windower.add_to_chat(207, '//st show     - Show displays')
+    windower.add_to_chat(207, '//st hide     - Hide displays')
+    windower.add_to_chat(207, '//st reset    - Reset parse and state')
+    windower.add_to_chat(207, '//st report   - Save full report to file')
+    windower.add_to_chat(207, '//st discord  - Toggle Discord webhook pushes')
+    windower.add_to_chat(207, '//st addnote  - Add a note to the end of the report')
+end
+
 windower.register_event('addon command', function(...)
     local args = {...}
     if #args == 0 then
-        windower.add_to_chat(207, '[SortieTracker] Commands:')
-        windower.add_to_chat(207, '//st show     - Show displays')
-        windower.add_to_chat(207, '//st hide     - Hide displays')
-        windower.add_to_chat(207, '//st reset    - Reset parse and state')
-        windower.add_to_chat(207, '//st report   - Save full report to file')
-        windower.add_to_chat(207, '//st discord  - Toggle Discord webhook pushes')
-        windower.add_to_chat(207, '//st addnote  - Add a note to the end of the report')
+        print_help()
         return
     end
 
@@ -68,11 +73,19 @@ windower.register_event('addon command', function(...)
         else
             windower.add_to_chat(123, "[SortieTracker] Please provide a note to add.")
         end
+    elseif cmd == 'help' then
+        print_help()
     else
         windower.add_to_chat(123, '[SortieTracker] Unknown command.')
+        print_help()
     end
 end)
 
+windower.register_event('load', function()
+    windower.send_command('alias st sortietracker')
+end)
+
 windower.register_event('unload', function()
+    windower.send_command('unalias st')
     is_running = false
 end)
