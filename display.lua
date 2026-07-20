@@ -31,6 +31,16 @@ local function comma_value(n)
     return left .. (num:reverse():gsub('(%d%d%d)', '%1,'):reverse()) .. right
 end
 
+local function render_sector(name, sector, max_ch, max_ca, max_co)
+    local ch_str = ""
+    for i=1, max_ch do if sector.Ch >= i then ch_str = ch_str .. "X" else ch_str = ch_str .. "-" end end
+    local ca_str = ""
+    for i=1, max_ca do if sector.Ca >= i then ca_str = ca_str .. "X" else ca_str = ca_str .. "-" end end
+    local co_str = ""
+    for i=1, max_co do if sector.Co >= i then co_str = co_str .. "X" else co_str = co_str .. "-" end end
+    return string.format("\\cs(255,255,255)%s\\cr[\\cs(225,150,0)Ch%s\\cr|\\cs(225,150,0)Ca%s\\cr|\\cs(225,150,0)Co%s\\cr]", name, ch_str, ca_str, co_str)
+end
+
 function display.init()
     progression_box = texts.new(default_progression_settings)
     parse_box = texts.new(default_parse_settings)
@@ -72,6 +82,31 @@ function display.update()
         for _, t in ipairs(state.temp_items) do
             table.insert(prog_lines, string.format("\\cs(225,150,0)%s\\cr \\cs(255,255,255)- %s\\cr", t.time, t.name))
         end
+    end
+
+    table.insert(prog_lines, "")
+    table.insert(prog_lines, "\\cs(100,200,200)[ Objectives ]\\cr")
+    table.insert(prog_lines, render_sector("A", state.sectors.A, 5, 2, 1) .. " " .. render_sector("B", state.sectors.B, 5, 2, 1))
+    table.insert(prog_lines, render_sector("C", state.sectors.C, 5, 2, 1) .. " " .. render_sector("D", state.sectors.D, 5, 2, 1))
+    table.insert(prog_lines, render_sector("E", state.sectors.E, 1, 2, 1) .. " " .. render_sector("F", state.sectors.F, 1, 2, 1))
+    table.insert(prog_lines, render_sector("G", state.sectors.G, 1, 2, 1) .. " " .. render_sector("H", state.sectors.H, 1, 2, 1))
+
+    local other_objs = {}
+    if state.other["Ground Aurum"] > 0 then table.insert(other_objs, string.format("G.Aurum: \\cs(225,150,0)%d\\cr", state.other["Ground Aurum"])) end
+    if state.other["Basement Aurum"] > 0 then table.insert(other_objs, string.format("B.Aurum: \\cs(225,150,0)%d\\cr", state.other["Basement Aurum"])) end
+    if state.other["G Seal"] > 0 then table.insert(other_objs, string.format("G.Seal: \\cs(225,150,0)%d\\cr", state.other["G Seal"])) end
+    if #other_objs > 0 then
+        table.insert(prog_lines, "\\cs(255,255,255)" .. table.concat(other_objs, " | ") .. "\\cr")
+    end
+
+    if state.cases["Old Case"] > 0 or state.cases["Old Case +1"] > 0 or state.cases["Old Case +2"] > 0 then
+        table.insert(prog_lines, "")
+        table.insert(prog_lines, "\\cs(100,200,200)[ Cases ]\\cr")
+        local cases = {}
+        if state.cases["Old Case"] > 0 then table.insert(cases, "NQ: \\cs(225,150,0)" .. state.cases["Old Case"] .. "\\cr") end
+        if state.cases["Old Case +1"] > 0 then table.insert(cases, "+1: \\cs(225,150,0)" .. state.cases["Old Case +1"] .. "\\cr") end
+        if state.cases["Old Case +2"] > 0 then table.insert(cases, "+2: \\cs(225,150,0)" .. state.cases["Old Case +2"] .. "\\cr") end
+        table.insert(prog_lines, "\\cs(255,255,255)" .. table.concat(cases, " | ") .. "\\cr")
     end
 
     progression_box:text(table.concat(prog_lines, "\n"))

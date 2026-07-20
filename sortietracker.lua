@@ -34,11 +34,12 @@ coroutine.schedule(update_loop, 1)
 local function print_help()
     windower.add_to_chat(207, '[SortieTracker] Commands:')
     windower.add_to_chat(207, '//st show     - Show displays')
-    windower.add_to_chat(207, '//st hide     - Hide displays')
-    windower.add_to_chat(207, '//st reset    - Reset parse and state')
-    windower.add_to_chat(207, '//st report   - Save full report to file')
-    windower.add_to_chat(207, '//st discord  - Toggle Discord webhook pushes')
-    windower.add_to_chat(207, '//st addnote  - Add a note to the end of the report')
+    windower.add_to_chat(207, '//st hide       - Hide displays')
+    windower.add_to_chat(207, '//st reset      - Reset parse and state')
+    windower.add_to_chat(207, '//st resetparse - Reset just the Sortie Performance parse')
+    windower.add_to_chat(207, '//st report     - Save full report to file')
+    windower.add_to_chat(207, '//st discord    - Toggle Discord webhook pushes')
+    windower.add_to_chat(207, '//st addnote    - Add a note to the end of the report')
 end
 
 windower.register_event('addon command', function(...)
@@ -56,6 +57,9 @@ windower.register_event('addon command', function(...)
         currency.request_update()
         additional_note = "Nothing to add"
         windower.add_to_chat(207, '[SortieTracker] Data reset.')
+    elseif cmd == 'resetparse' then
+        parser.reset()
+        windower.add_to_chat(207, '[SortieTracker] Parse data reset.')
     elseif cmd == 'show' then
         display.show()
     elseif cmd == 'hide' then
