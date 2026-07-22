@@ -85,23 +85,29 @@ function report.generate(additional_note, push_to_discord)
     table.insert(lines, ('Run Accumulation: +%s'):format(comma_value(state.run_gallimaufry)))
     table.insert(lines, "-----------------------------")
 
-    if #state.bosses_killed > 0 then
-        table.insert(lines, "[Defeated Bosses]")
-        for _, b in ipairs(state.bosses_killed) do
-            table.insert(lines, string.format("%s - %s", b.time, b.name))
+    local sector_bosses = {A={}, B={}, C={}, D={}, E={}, F={}, G={}, H={}}
+    for _, b in ipairs(state.bosses_killed) do
+        if b.sector and sector_bosses[b.sector] then
+            table.insert(sector_bosses[b.sector], b.name)
         end
-        table.insert(lines, "-----------------------------")
+    end
+    
+    local function get_boss_str(sector_key)
+        if #sector_bosses[sector_key] > 0 then
+            return " | Bosses: " .. table.concat(sector_bosses[sector_key], ", ")
+        end
+        return ""
     end
 
     table.insert(lines, "[ == Objectives == ]")
-    table.insert(lines, render_sector("A", state.sectors.A, 5, 2, 1))
-    table.insert(lines, render_sector("B", state.sectors.B, 5, 2, 1))
-    table.insert(lines, render_sector("C", state.sectors.C, 5, 2, 1))
-    table.insert(lines, render_sector("D", state.sectors.D, 5, 2, 1))
-    table.insert(lines, render_sector("E", state.sectors.E, 1, 2, 1))
-    table.insert(lines, render_sector("F", state.sectors.F, 1, 2, 1))
-    table.insert(lines, render_sector("G", state.sectors.G, 1, 2, 1))
-    table.insert(lines, render_sector("H", state.sectors.H, 1, 2, 1))
+    table.insert(lines, render_sector("A", state.sectors.A, 5, 2, 1) .. get_boss_str("A"))
+    table.insert(lines, render_sector("B", state.sectors.B, 5, 2, 1) .. get_boss_str("B"))
+    table.insert(lines, render_sector("C", state.sectors.C, 5, 2, 1) .. get_boss_str("C"))
+    table.insert(lines, render_sector("D", state.sectors.D, 5, 2, 1) .. get_boss_str("D"))
+    table.insert(lines, render_sector("E", state.sectors.E, 1, 2, 1) .. get_boss_str("E"))
+    table.insert(lines, render_sector("F", state.sectors.F, 1, 2, 1) .. get_boss_str("F"))
+    table.insert(lines, render_sector("G", state.sectors.G, 1, 2, 1) .. get_boss_str("G"))
+    table.insert(lines, render_sector("H", state.sectors.H, 1, 2, 1) .. get_boss_str("H"))
     table.insert(lines, "Ground Aurum: " .. (state.other["Ground Aurum"] or 0))
     table.insert(lines, "Basement Aurum: " .. (state.other["Basement Aurum"] or 0))
     table.insert(lines, "G Seal: " .. (state.other["G Seal"] or 0))
@@ -143,11 +149,14 @@ function report.generate(additional_note, push_to_discord)
         for i, p in ipairs(sorted_players) do
             local sc_dmg = p_data.players[p.name].sc_damage or 0
             if sc_dmg > 0 then
-                table.insert(sc_strings, string.format("%s-%s", string.sub(p.name, 1, 4), comma_value(sc_dmg)))
+                table.insert(sc_strings, string.format("  %-12s %s", string.sub(p.name, 1, 12), comma_value(sc_dmg)))
             end
         end
         if #sc_strings > 0 then
-            table.insert(lines, "Skillchains: " .. table.concat(sc_strings, ", "))
+            table.insert(lines, "Skillchains:")
+            for _, sc in ipairs(sc_strings) do
+                table.insert(lines, sc)
+            end
         end
     else
         table.insert(lines, "No combat data.")
