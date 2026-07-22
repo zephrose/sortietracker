@@ -13,10 +13,10 @@ local state = {
     chest_list = {},
     cases = { ["Old Case"] = 0, ["Old Case +1"] = 0, ["Old Case +2"] = 0 },
     sectors = {
-        A = { Ch = 0, Ca = 0, Co = 0 }, B = { Ch = 0, Ca = 0, Co = 0 },
-        C = { Ch = 0, Ca = 0, Co = 0 }, D = { Ch = 0, Ca = 0, Co = 0 },
-        E = { Ch = 0, Ca = 0, Co = 0 }, F = { Ch = 0, Ca = 0, Co = 0 },
-        G = { Ch = 0, Ca = 0, Co = 0 }, H = { Ch = 0, Ca = 0, Co = 0 }
+        A = { items = {} }, B = { items = {} },
+        C = { items = {} }, D = { items = {} },
+        E = { items = {} }, F = { items = {} },
+        G = { items = {} }, H = { items = {} }
     },
     other = { ["Ground Aurum"] = 0, ["Basement Aurum"] = 0, ["G Seal"] = 0 },
     current_sector = "A"
@@ -44,6 +44,9 @@ function tracker.init()
         end
         for _, major in ipairs(nms_data.sortie_bosses.major_nms or {}) do
             state.boss_list[major.nm:lower()] = {name = major.nm, type = "main", sector = major.sector}
+            if major.nm:lower() == "leshonn" then
+                state.boss_list["leshon"] = {name = major.nm, type = "main", sector = major.sector}
+            end
         end
     end
 end
@@ -65,14 +68,8 @@ windower.register_event('incoming text', function(original, modified, mode)
         state.run_gallimaufry = state.run_gallimaufry + amt
         
         -- Fallback for caskets/coffers if spawn message missed (rarely needed, but safe)
-        if amt == 300 then
-            state.sectors[state.current_sector].Ca = state.sectors[state.current_sector].Ca + 1
-        elseif amt == 500 then
-            state.sectors[state.current_sector].Co = state.sectors[state.current_sector].Co + 1
-        elseif amt == 1000 then
+        if amt == 1000 then
             state.other["Ground Aurum"] = state.other["Ground Aurum"] + 1
-        elseif amt == 1500 then
-            state.sectors[state.current_sector].Co = state.sectors[state.current_sector].Co + 1
         elseif amt == 3000 then
             state.other["Basement Aurum"] = state.other["Basement Aurum"] + 1
         end
@@ -80,11 +77,7 @@ windower.register_event('incoming text', function(original, modified, mode)
 
     -- Tracking Chest Spawns
     local clower = cleaned_line:lower()
-    if clower:find("treasure casket appears") then
-        if state.sectors[state.current_sector] then state.sectors[state.current_sector].Ca = state.sectors[state.current_sector].Ca + 1 end
-    elseif clower:find("treasure coffer appears") then
-        if state.sectors[state.current_sector] then state.sectors[state.current_sector].Co = state.sectors[state.current_sector].Co + 1 end
-    elseif clower:find("aurum strongbox appears") or clower:find("aurum coffer appears") then
+    if clower:find("aurum strongbox appears") or clower:find("aurum coffer appears") then
         if state.current_sector:match("[A-D]") then
             state.other["Ground Aurum"] = state.other["Ground Aurum"] + 1
         else
@@ -114,14 +107,27 @@ windower.register_event('incoming text', function(original, modified, mode)
         temp_item = temp_item:gsub('[^%w%s#\'-]', ''):gsub('^%s*(.-)%s*$', '%1')
         table.insert(state.temp_items, {name = temp_item, time = get_time_string()})
         
+        local t_lower = temp_item:lower()
+        local item_type
+        if t_lower:find("shard") then item_type = "Shard"
+        elseif t_lower:find("metal") then item_type = "Metal"
+        elseif t_lower:find("frag") then item_type = "Fragment"
+        end
+        
         -- Identify sector from Temp Item (e.g. "Ra'Kaznar shard #A" -> Sector A)
         local sector_match = temp_item:match("#([A-H])")
-        if sector_match then
-            state.current_sector = sector_match
-            if state.sectors[sector_match] then
-                state.sectors[sector_match].Ch = state.sectors[sector_match].Ch + 1
+        local item_sector = sector_match or state.current_sector
+        
+        if item_type and item_sector and state.sectors[item_sector] then
+            state.sectors[item_sector].items = state.sectors[item_sector].items or {}
+            local has_it = false
+            for _, v in ipairs(state.sectors[item_sector].items) do
+                if v == item_type then has_it = true break end
             end
-        elseif temp_item:lower():find("seal") then
+            if not has_it then
+                table.insert(state.sectors[item_sector].items, item_type)
+            end
+        elseif t_lower:find("seal") then
             state.other["G Seal"] = state.other["G Seal"] + 1
         end
     end
@@ -162,10 +168,10 @@ function tracker.reset()
     state.temp_items = {}
     state.cases = { ["Old Case"] = 0, ["Old Case +1"] = 0, ["Old Case +2"] = 0 }
     state.sectors = {
-        A = { Ch = 0, Ca = 0, Co = 0 }, B = { Ch = 0, Ca = 0, Co = 0 },
-        C = { Ch = 0, Ca = 0, Co = 0 }, D = { Ch = 0, Ca = 0, Co = 0 },
-        E = { Ch = 0, Ca = 0, Co = 0 }, F = { Ch = 0, Ca = 0, Co = 0 },
-        G = { Ch = 0, Ca = 0, Co = 0 }, H = { Ch = 0, Ca = 0, Co = 0 }
+        A = { items = {} }, B = { items = {} },
+        C = { items = {} }, D = { items = {} },
+        E = { items = {} }, F = { items = {} },
+        G = { items = {} }, H = { items = {} }
     }
     state.other = { ["Ground Aurum"] = 0, ["Basement Aurum"] = 0, ["G Seal"] = 0 }
     state.current_sector = "A"

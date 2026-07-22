@@ -5,19 +5,10 @@ local currency = require('currency')
 local tracker = require('tracker')
 local parser = require('parser')
 
-local progression_box
-local parse_box
+local display_box
 
-local default_progression_settings = {
+local default_settings = {
     pos = {x = 100, y = 100},
-    bg = {visible = true, alpha = 150, red = 0, green = 0, blue = 0},
-    text = {size = 10, font = "Consolas", alpha = 255, red = 255, green = 255, blue = 255},
-    padding = 4,
-    flags = {draggable = true}
-}
-
-local default_parse_settings = {
-    pos = {x = 100, y = 400},
     bg = {visible = true, alpha = 150, red = 0, green = 0, blue = 0},
     text = {size = 10, font = "Consolas", alpha = 255, red = 255, green = 255, blue = 255},
     padding = 4,
@@ -31,25 +22,15 @@ local function comma_value(n)
     return left .. (num:reverse():gsub('(%d%d%d)', '%1,'):reverse()) .. right
 end
 
-local function render_sector(name, sector, max_ch, max_ca, max_co)
-    local ch_str = ""
-    for i=1, max_ch do if sector.Ch >= i then ch_str = ch_str .. "X" else ch_str = ch_str .. "-" end end
-    local ca_str = ""
-    for i=1, max_ca do if sector.Ca >= i then ca_str = ca_str .. "X" else ca_str = ca_str .. "-" end end
-    local co_str = ""
-    for i=1, max_co do if sector.Co >= i then co_str = co_str .. "X" else co_str = co_str .. "-" end end
-    return string.format("\\cs(255,255,255)%s\\cr[\\cs(225,150,0)Ch%s\\cr|\\cs(225,150,0)Ca%s\\cr|\\cs(225,150,0)Co%s\\cr]", name, ch_str, ca_str, co_str)
-end
+
 
 function display.init()
-    progression_box = texts.new(default_progression_settings)
-    parse_box = texts.new(default_parse_settings)
-    progression_box:show()
-    parse_box:show()
+    display_box = texts.new(default_settings)
+    display_box:show()
 end
 
 function display.update()
-    if not progression_box or not parse_box then return end
+    if not display_box then return end
 
     -- Update Progression Box
     local state = tracker.get_state()
@@ -60,36 +41,38 @@ function display.update()
     table.insert(prog_lines, string.format("\\cs(255,255,255)Gallimaufry Stored: \\cr\\cs(225,150,0)%s\\cr", comma_value(total_galli)))
     table.insert(prog_lines, string.format("\\cs(255,255,255)Run Accumulation:   \\cr\\cs(225,150,0)+%s\\cr", comma_value(state.run_gallimaufry)))
     
-    if #state.bosses_killed > 0 then
-        table.insert(prog_lines, "")
-        table.insert(prog_lines, "\\cs(100,200,200)[ Bosses Defeated ]\\cr")
-        for _, b in ipairs(state.bosses_killed) do
-            table.insert(prog_lines, string.format("\\cs(225,150,0)%s\\cr \\cs(255,255,255)- %s\\cr", b.time, b.name))
-        end
-    end
-
-    if #state.chests_opened > 0 then
-        table.insert(prog_lines, "")
-        table.insert(prog_lines, "\\cs(100,200,200)[ Chests & Coffers ]\\cr")
-        for _, c in ipairs(state.chests_opened) do
-            table.insert(prog_lines, string.format("\\cs(225,150,0)%s\\cr \\cs(255,255,255)- %s\\cr", c.time, c.name))
-        end
-    end
-
-    if state.temp_items and #state.temp_items > 0 then
-        table.insert(prog_lines, "")
-        table.insert(prog_lines, "\\cs(100,200,200)[ Temp Items ]\\cr")
-        for _, t in ipairs(state.temp_items) do
-            table.insert(prog_lines, string.format("\\cs(225,150,0)%s\\cr \\cs(255,255,255)- %s\\cr", t.time, t.name))
-        end
-    end
-
     table.insert(prog_lines, "")
     table.insert(prog_lines, "\\cs(100,200,200)[ Objectives ]\\cr")
-    table.insert(prog_lines, render_sector("A", state.sectors.A, 5, 2, 1) .. " " .. render_sector("B", state.sectors.B, 5, 2, 1))
-    table.insert(prog_lines, render_sector("C", state.sectors.C, 5, 2, 1) .. " " .. render_sector("D", state.sectors.D, 5, 2, 1))
-    table.insert(prog_lines, render_sector("E", state.sectors.E, 1, 2, 1) .. " " .. render_sector("F", state.sectors.F, 1, 2, 1))
-    table.insert(prog_lines, render_sector("G", state.sectors.G, 1, 2, 1) .. " " .. render_sector("H", state.sectors.H, 1, 2, 1))
+    local sectors = {"A", "B", "C", "D", "E", "F", "G", "H"}
+    for _, s in ipairs(sectors) do
+        local sec_bosses = {}
+        for _, b in ipairs(state.bosses_killed) do
+            if b.sector == s then
+                table.insert(sec_bosses, b.name)
+            end
+        end
+        
+        local sec_items = {}
+        if state.sectors[s] and state.sectors[s].items then
+            for _, i in ipairs(state.sectors[s].items) do
+                table.insert(sec_items, i)
+            end
+        end
+        
+        local text_parts = {}
+        if #sec_bosses > 0 then
+            table.insert(text_parts, "\\cs(225,150,0)" .. table.concat(sec_bosses, ", ") .. "\\cr")
+        end
+        if #sec_items > 0 then
+            table.insert(text_parts, "\\cs(150,225,150)" .. table.concat(sec_items, ", ") .. "\\cr")
+        end
+        
+        if #text_parts > 0 then
+            table.insert(prog_lines, string.format("\\cs(255,255,255)%s:\\cr %s", s, table.concat(text_parts, " \\cs(100,100,100)|\\cr ")))
+        else
+            table.insert(prog_lines, string.format("\\cs(255,255,255)%s:\\cr \\cs(100,100,100)-\\cr", s))
+        end
+    end
 
     local other_objs = {}
     if state.other["Ground Aurum"] > 0 then table.insert(other_objs, string.format("G.Aurum: \\cs(225,150,0)%d\\cr", state.other["Ground Aurum"])) end
@@ -109,13 +92,12 @@ function display.update()
         table.insert(prog_lines, "\\cs(255,255,255)" .. table.concat(cases, " | ") .. "\\cr")
     end
 
-    progression_box:text(table.concat(prog_lines, "\n"))
-
-    -- Update Parse Box
+    table.insert(prog_lines, "")
+    
     local p_data = parser.get_damage_data()
-    local parse_lines = {}
-    table.insert(parse_lines, "\\cs(100,200,200)[ Sortie Performance ]\\cr")
-    table.insert(parse_lines, string.format("\\cs(225,150,0)%-14s %-10s %-7s %-7s %-8s\\cr", "Player", "Damage", "Dmg %", "Acc %", "WS Avg"))
+
+    table.insert(prog_lines, "\\cs(100,200,200)[ Sortie Performance ]\\cr")
+    table.insert(prog_lines, string.format("\\cs(225,150,0)%-14s %-10s %-7s %-7s %-8s\\cr", "Player", "Damage", "Dmg %", "Acc %", "WS Avg"))
     
     if p_data.total > 0 then
         -- Sort players by damage
@@ -142,23 +124,21 @@ function display.update()
             local p_str = string.format("\\cs(100,200,200)%-14s\\cr \\cs(255,255,255)%-10s %-7.1f %-7.1f %-8s\\cr", 
                 string.sub(p.name, 1, 13), comma_value(p.dmg), pct, acc_pct, comma_value(ws_avg))
             
-            table.insert(parse_lines, p_str)
+            table.insert(prog_lines, p_str)
         end
     else
-        table.insert(parse_lines, "\\cs(255,255,255)No combat data.\\cr")
+        table.insert(prog_lines, "\\cs(255,255,255)No combat data.\\cr")
     end
 
-    parse_box:text(table.concat(parse_lines, "\n"))
+    display_box:text(table.concat(prog_lines, "\n"))
 end
 
 function display.show()
-    if progression_box then progression_box:show() end
-    if parse_box then parse_box:show() end
+    if display_box then display_box:show() end
 end
 
 function display.hide()
-    if progression_box then progression_box:hide() end
-    if parse_box then parse_box:hide() end
+    if display_box then display_box:hide() end
 end
 
 return display

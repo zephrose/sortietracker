@@ -64,15 +64,7 @@ local function send_to_discord(message)
     end
 end
 
-local function render_sector(name, sector, max_ch, max_ca, max_co)
-    local ch_str = ""
-    for i=1, max_ch do if sector.Ch >= i then ch_str = ch_str .. "X " else ch_str = ch_str .. "- " end end
-    local ca_str = ""
-    for i=1, max_ca do if sector.Ca >= i then ca_str = ca_str .. "X " else ca_str = ca_str .. "- " end end
-    local co_str = ""
-    for i=1, max_co do if sector.Co >= i then co_str = co_str .. "X " else co_str = co_str .. "- " end end
-    return string.format("%s[Ch %s|Ca %s|Co %s]", name, ch_str, ca_str, co_str)
-end
+
 
 function report.generate(additional_note, push_to_discord)
     local state = tracker.get_state()
@@ -92,22 +84,40 @@ function report.generate(additional_note, push_to_discord)
         end
     end
     
-    local function get_boss_str(sector_key)
-        if #sector_bosses[sector_key] > 0 then
-            return " | Bosses: " .. table.concat(sector_bosses[sector_key], ", ")
-        end
-        return ""
-    end
+
 
     table.insert(lines, "[ == Objectives == ]")
-    table.insert(lines, render_sector("A", state.sectors.A, 5, 2, 1) .. get_boss_str("A"))
-    table.insert(lines, render_sector("B", state.sectors.B, 5, 2, 1) .. get_boss_str("B"))
-    table.insert(lines, render_sector("C", state.sectors.C, 5, 2, 1) .. get_boss_str("C"))
-    table.insert(lines, render_sector("D", state.sectors.D, 5, 2, 1) .. get_boss_str("D"))
-    table.insert(lines, render_sector("E", state.sectors.E, 1, 2, 1) .. get_boss_str("E"))
-    table.insert(lines, render_sector("F", state.sectors.F, 1, 2, 1) .. get_boss_str("F"))
-    table.insert(lines, render_sector("G", state.sectors.G, 1, 2, 1) .. get_boss_str("G"))
-    table.insert(lines, render_sector("H", state.sectors.H, 1, 2, 1) .. get_boss_str("H"))
+    local sectors = {"A", "B", "C", "D", "E", "F", "G", "H"}
+    for _, s in ipairs(sectors) do
+        local sec_bosses = {}
+        if sector_bosses[s] then
+            for _, b in ipairs(sector_bosses[s]) do
+                table.insert(sec_bosses, b)
+            end
+        end
+        
+        local sec_items = {}
+        if state.sectors[s] and state.sectors[s].items then
+            for _, i in ipairs(state.sectors[s].items) do
+                table.insert(sec_items, i)
+            end
+        end
+        
+        local text_parts = {}
+        if #sec_bosses > 0 then
+            table.insert(text_parts, "Bosses: " .. table.concat(sec_bosses, ", "))
+        end
+        if #sec_items > 0 then
+            table.insert(text_parts, "Items: " .. table.concat(sec_items, ", "))
+        end
+        
+        if #text_parts > 0 then
+            table.insert(lines, string.format("%s: %s", s, table.concat(text_parts, " | ")))
+        else
+            table.insert(lines, string.format("%s: -", s))
+        end
+    end
+    
     table.insert(lines, "Ground Aurum: " .. (state.other["Ground Aurum"] or 0))
     table.insert(lines, "Basement Aurum: " .. (state.other["Basement Aurum"] or 0))
     table.insert(lines, "G Seal: " .. (state.other["G Seal"] or 0))
