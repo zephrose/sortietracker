@@ -14,17 +14,30 @@ local job_mapping = {
 local party_jobs = {}
 
 windower.register_event('incoming chunk', function(id, data)
-    if id == 0x0DD then
+    if id == 0xDF then  -- Character update (0xDF)
+        local packet = packets.parse('incoming', data)
+        if packet then
+            local playerId = packet['ID']
+            if playerId and playerId > 0 then
+                local mob = windower.ffxi.get_mob_by_id(playerId)
+                if mob and mob.name then
+                    party_jobs[mob.name] = {
+                        main = job_mapping[packet['Main job']] or "UNK",
+                        sub = job_mapping[packet['Sub job']] or "UNK"
+                    }
+                end
+            end
+        end
+    elseif id == 0x0DD then  -- Party member update (0xDD)
         local packet = packets.parse('incoming', data)
         if packet then
             local name = packet['Name']
-            local main_job = packet['Main job']
-            local sub_job = packet['Sub job']
+            local playerId = packet['ID']
             
-            if name and name ~= '' and main_job and sub_job then
+            if name and name ~= '' and playerId and playerId > 0 then
                 party_jobs[name] = {
-                    main = job_mapping[main_job] or "UNK",
-                    sub = job_mapping[sub_job] or "UNK"
+                    main = job_mapping[packet['Main job']] or "UNK",
+                    sub = job_mapping[packet['Sub job']] or "UNK"
                 }
             end
         end

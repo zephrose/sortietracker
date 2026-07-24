@@ -11,6 +11,7 @@ local state = {
     temp_items = {},    -- {name = "Ra'Kaznar Plate A", time = "10:25:00"}
     boss_list = {},
     chest_list = {},
+    gallimaufry_to_mini_nm = {},
     cases = { ["Old Case"] = 0, ["Old Case +1"] = 0, ["Old Case +2"] = 0 },
     sectors = {
         A = { items = {} }, B = { items = {} },
@@ -41,6 +42,9 @@ function tracker.init()
     if nms_data and nms_data.sortie_bosses then
         for _, minor in ipairs(nms_data.sortie_bosses.minor_nms or {}) do
             state.boss_list[minor.nm:lower()] = {name = minor.nm, type = "mini", sector = minor.sector}
+            if minor.gallimaufry then
+                state.gallimaufry_to_mini_nm[minor.gallimaufry] = {name = minor.nm, type = "mini", sector = minor.sector}
+            end
         end
         for _, major in ipairs(nms_data.sortie_bosses.major_nms or {}) do
             state.boss_list[major.nm:lower()] = {name = major.nm, type = "main", sector = major.sector}
@@ -72,6 +76,24 @@ windower.register_event('incoming text', function(original, modified, mode)
             state.other["Ground Aurum"] = state.other["Ground Aurum"] + 1
         elseif amt == 3000 then
             state.other["Basement Aurum"] = state.other["Basement Aurum"] + 1
+        end
+
+        -- Track Mini NMs by Gallimaufry drops (chests)
+        if state.gallimaufry_to_mini_nm and state.gallimaufry_to_mini_nm[amt] then
+            local boss_info = state.gallimaufry_to_mini_nm[amt]
+            local already_recorded = false
+            for _, b in ipairs(state.bosses_killed) do
+                if b.name == boss_info.name then already_recorded = true break end
+            end
+            if not already_recorded then
+                state.current_sector = boss_info.sector
+                table.insert(state.bosses_killed, {
+                    name = boss_info.name,
+                    time = get_time_string(),
+                    type = boss_info.type,
+                    sector = boss_info.sector
+                })
+            end
         end
     end
 
