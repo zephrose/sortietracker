@@ -45,10 +45,17 @@ function display.update()
     table.insert(prog_lines, "\\cs(100,200,200)[ Objectives ]\\cr")
     local sectors = {"A", "B", "C", "D", "E", "F", "G", "H"}
     for _, s in ipairs(sectors) do
-        local sec_bosses = {}
+        local mini_boss = nil
+        local sector_boss = nil
         for _, b in ipairs(state.bosses_killed) do
             if b.sector == s then
-                table.insert(sec_bosses, b.name)
+                if b.type == "mini" then
+                    mini_boss = b.name
+                elseif b.type == "main" then
+                    sector_boss = b.name
+                else
+                    if not sector_boss then sector_boss = b.name end
+                end
             end
         end
         
@@ -59,16 +66,25 @@ function display.update()
             end
         end
         
-        local text_parts = {}
-        if #sec_bosses > 0 then
-            table.insert(text_parts, "\\cs(225,150,0)" .. table.concat(sec_bosses, ", ") .. "\\cr")
-        end
+        local elements = {}
         if #sec_items > 0 then
-            table.insert(text_parts, "\\cs(150,225,150)" .. table.concat(sec_items, ", ") .. "\\cr")
+            table.insert(elements, "\\cs(150,225,150)" .. table.concat(sec_items, ", ") .. "\\cr")
+        end
+        if mini_boss then
+            if #elements > 0 then
+                table.insert(elements, "\\cs(100,100,100)-\\cr")
+            end
+            table.insert(elements, "\\cs(225,150,0)" .. mini_boss .. "\\cr")
+        end
+        if sector_boss then
+            if #elements > 0 then
+                table.insert(elements, "\\cs(100,100,100)--\\cr")
+            end
+            table.insert(elements, "\\cs(225,150,0)" .. sector_boss .. "\\cr")
         end
         
-        if #text_parts > 0 then
-            table.insert(prog_lines, string.format("\\cs(255,255,255)%s:\\cr %s", s, table.concat(text_parts, " \\cs(100,100,100)|\\cr ")))
+        if #elements > 0 then
+            table.insert(prog_lines, string.format("\\cs(255,255,255)%s:\\cr %s", s, table.concat(elements, " ")))
         else
             table.insert(prog_lines, string.format("\\cs(255,255,255)%s:\\cr \\cs(100,100,100)-\\cr", s))
         end

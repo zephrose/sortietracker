@@ -77,22 +77,20 @@ function report.generate(additional_note, push_to_discord)
     table.insert(lines, ('Run Accumulation: +%s'):format(comma_value(state.run_gallimaufry)))
     table.insert(lines, "-----------------------------")
 
-    local sector_bosses = {A={}, B={}, C={}, D={}, E={}, F={}, G={}, H={}}
-    for _, b in ipairs(state.bosses_killed) do
-        if b.sector and sector_bosses[b.sector] then
-            table.insert(sector_bosses[b.sector], b.name)
-        end
-    end
-    
-
-
     table.insert(lines, "[ == Objectives == ]")
     local sectors = {"A", "B", "C", "D", "E", "F", "G", "H"}
     for _, s in ipairs(sectors) do
-        local sec_bosses = {}
-        if sector_bosses[s] then
-            for _, b in ipairs(sector_bosses[s]) do
-                table.insert(sec_bosses, b)
+        local mini_boss = nil
+        local sector_boss = nil
+        for _, b in ipairs(state.bosses_killed) do
+            if b.sector == s then
+                if b.type == "mini" then
+                    mini_boss = b.name
+                elseif b.type == "main" then
+                    sector_boss = b.name
+                else
+                    if not sector_boss then sector_boss = b.name end
+                end
             end
         end
         
@@ -103,16 +101,21 @@ function report.generate(additional_note, push_to_discord)
             end
         end
         
-        local text_parts = {}
-        if #sec_bosses > 0 then
-            table.insert(text_parts, "Bosses: " .. table.concat(sec_bosses, ", "))
-        end
+        local elements = {}
         if #sec_items > 0 then
-            table.insert(text_parts, "Items: " .. table.concat(sec_items, ", "))
+            table.insert(elements, table.concat(sec_items, ", "))
+        end
+        if mini_boss then
+            if #elements > 0 then table.insert(elements, "-") end
+            table.insert(elements, mini_boss)
+        end
+        if sector_boss then
+            if #elements > 0 then table.insert(elements, "--") end
+            table.insert(elements, sector_boss)
         end
         
-        if #text_parts > 0 then
-            table.insert(lines, string.format("%s: %s", s, table.concat(text_parts, " | ")))
+        if #elements > 0 then
+            table.insert(lines, string.format("%s: %s", s, table.concat(elements, " ")))
         else
             table.insert(lines, string.format("%s: -", s))
         end
