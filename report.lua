@@ -133,7 +133,7 @@ function report.generate(additional_note, push_to_discord)
     table.insert(lines, "-----------------------------")
 
     table.insert(lines, "[ Sortie Performance ]")
-    table.insert(lines, string.format("%-14s %-10s %-7s %-7s %-8s", "Player", "Damage", "Dmg %", "Acc %", "WS Avg"))
+    table.insert(lines, string.format("%-14s %-9s %-10s %-7s %-7s %-8s", "Player", "Job", "Damage", "Dmg %", "Acc %", "WS Avg"))
     if p_data.total > 0 then
         local sorted_players = {}
         for name, data in pairs(p_data.players) do
@@ -155,7 +155,12 @@ function report.generate(additional_note, push_to_discord)
                 ws_avg = math.floor(p.ws_damage / p.ws_count)
             end
 
-            table.insert(lines, string.format("%-14s %-10s %-7.1f %-7.1f %-8s", string.sub(p.name, 1, 13), comma_value(p.dmg), pct, acc_pct, comma_value(ws_avg)))
+            local job_str = ""
+            if p_data.jobs and p_data.jobs[p.name] then
+                job_str = string.format("%s/%s", p_data.jobs[p.name].main, p_data.jobs[p.name].sub)
+            end
+
+            table.insert(lines, string.format("%-14s %-9s %-10s %-7.1f %-7.1f %-8s", string.sub(p.name, 1, 13), string.sub(job_str, 1, 8), comma_value(p.dmg), pct, acc_pct, comma_value(ws_avg)))
         end
         
         local sc_strings = {}

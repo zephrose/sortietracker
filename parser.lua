@@ -3,6 +3,26 @@ local parser = {}
 local packets = require('packets')
 local res = require('resources')
 
+local party_jobs = {}
+
+windower.register_event('incoming chunk', function(id, data)
+    if id == 0x0DD then
+        local packet = packets.parse('incoming', data)
+        if packet then
+            local name = packet['Name']
+            local main_job = packet['Main job']
+            local sub_job = packet['Sub job']
+            
+            if name and name ~= '' and main_job and sub_job then
+                party_jobs[name] = {
+                    main = res.jobs[main_job] and res.jobs[main_job].en_short or "UNK",
+                    sub = res.jobs[sub_job] and res.jobs[sub_job].en_short or "UNK"
+                }
+            end
+        end
+    end
+end)
+
 -- Store total damage per player
 local damage_data = {
     total = 0,
@@ -158,6 +178,14 @@ windower.register_event('action', function(act)
 end)
 
 function parser.get_damage_data()
+    local p = windower.ffxi.get_player()
+    if p and p.name and p.main_job_id and p.sub_job_id then
+        party_jobs[p.name] = {
+            main = res.jobs[p.main_job_id] and res.jobs[p.main_job_id].en_short or "UNK",
+            sub = res.jobs[p.sub_job_id] and res.jobs[p.sub_job_id].en_short or "UNK"
+        }
+    end
+    damage_data.jobs = party_jobs
     return damage_data
 end
 
@@ -166,6 +194,7 @@ function parser.reset()
         total = 0,
         players = {}
     }
+    party_jobs = {}
 end
 
 return parser
