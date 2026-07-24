@@ -107,11 +107,11 @@ function report.generate(additional_note, push_to_discord)
         end
         if mini_boss then
             if #elements > 0 then table.insert(elements, "-") end
-            table.insert(elements, mini_boss)
+            table.insert(elements, "" .. mini_boss .. "")
         end
         if sector_boss then
             if #elements > 0 then table.insert(elements, "--") end
-            table.insert(elements, sector_boss)
+            table.insert(elements, "" .. sector_boss .. "")
         end
         
         if #elements > 0 then

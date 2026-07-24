@@ -3,6 +3,14 @@ local parser = {}
 local packets = require('packets')
 local res = require('resources')
 
+local job_mapping = {
+    [0] = "NON",
+    [1] = "WAR", [2] = "MNK", [3] = "WHM", [4] = "BLM", [5] = "RDM", [6] = "THF",
+    [7] = "PLD", [8] = "DRK", [9] = "BST", [10] = "BRD", [11] = "RNG", [12] = "SAM",
+    [13] = "NIN", [14] = "DRG", [15] = "SMN", [16] = "BLU", [17] = "COR", [18] = "PUP",
+    [19] = "DNC", [20] = "SCH", [21] = "GEO", [22] = "RUN"
+}
+
 local party_jobs = {}
 
 windower.register_event('incoming chunk', function(id, data)
@@ -15,8 +23,8 @@ windower.register_event('incoming chunk', function(id, data)
             
             if name and name ~= '' and main_job and sub_job then
                 party_jobs[name] = {
-                    main = res.jobs[main_job] and res.jobs[main_job].en_short or "UNK",
-                    sub = res.jobs[sub_job] and res.jobs[sub_job].en_short or "UNK"
+                    main = job_mapping[main_job] or "UNK",
+                    sub = job_mapping[sub_job] or "UNK"
                 }
             end
         end
@@ -181,8 +189,8 @@ function parser.get_damage_data()
     local p = windower.ffxi.get_player()
     if p and p.name and p.main_job_id and p.sub_job_id then
         party_jobs[p.name] = {
-            main = res.jobs[p.main_job_id] and res.jobs[p.main_job_id].en_short or "UNK",
-            sub = res.jobs[p.sub_job_id] and res.jobs[p.sub_job_id].en_short or "UNK"
+            main = job_mapping[p.main_job_id] or "UNK",
+            sub = job_mapping[p.sub_job_id] or "UNK"
         }
     end
     damage_data.jobs = party_jobs
