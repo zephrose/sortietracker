@@ -48,9 +48,6 @@ function tracker.init()
         end
         for _, major in ipairs(nms_data.sortie_bosses.major_nms or {}) do
             state.boss_list[major.nm:lower()] = {name = major.nm, type = "main", sector = major.sector}
-            if major.nm:lower() == "leshonn" then
-                state.boss_list["leshon"] = {name = major.nm, type = "main", sector = major.sector}
-            end
         end
     end
 end
