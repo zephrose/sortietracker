@@ -162,11 +162,7 @@ local function record_accuracy(player_name, is_hit)
     end
 end
 
-local is_in_sortie = false
-
 windower.register_event('action', function(act)
-    if not is_in_sortie then return end
-
     local actor = get_player_info(act.actor_id)
     if not actor then return end
     
@@ -222,33 +218,6 @@ function parser.reset()
     party_jobs = {}
 end
 
-local function check_zone(id)
-    if not id then
-        local info = windower.ffxi.get_info()
-        if info then id = info.zone end
-    end
-    if id and res.zones[id] then
-        local z_name = res.zones[id].en or res.zones[id].english or res.zones[id].name or ""
-        if z_name:find("Outer Ra'Kaznar") and z_name:find("%[U%]") then
-            is_in_sortie = true
-        else
-            is_in_sortie = false
-        end
-    else
-        is_in_sortie = false
-    end
-end
 
-windower.register_event('zone change', function(new_id, old_id)
-    local was_in_sortie = is_in_sortie
-    check_zone(new_id)
-    if not was_in_sortie and is_in_sortie then
-        parser.reset()
-    end
-end)
-
-windower.register_event('load', function()
-    check_zone()
-end)
 
 return parser
