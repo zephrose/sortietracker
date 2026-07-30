@@ -120,7 +120,13 @@ windower.register_event('incoming text', function(original, modified, mode)
     end
 
     -- Tracking Temporary Items (Chests)
-    local temp_item = cleaned_line:match("temporary item:%s+([^%.]+)%.?")
+    -- e.g., "You obtain the temporary item: Ra'Kaznar shard #G!"
+    local temp_item = clower:match("obtains?%s+the%s+temporary item:%s+([^%.!]+)")
+    if not temp_item then
+        -- Fallback to the old generic regex just in case it doesn't say "obtains the"
+        temp_item = cleaned_line:match("temporary item:%s+([^%.!]+)")
+    end
+
     if temp_item then
         -- Clean character garbage (keep letters, numbers, spaces, #, -, ')
         temp_item = temp_item:gsub('[^%w%s#\'-]', ''):gsub('^%s*(.-)%s*$', '%1')
@@ -133,8 +139,8 @@ windower.register_event('incoming text', function(original, modified, mode)
         elseif t_lower:find("frag") then item_type = "Fragment"
         end
         
-        -- Identify sector from Temp Item (e.g. "Ra'Kaznar shard #A" -> Sector A)
-        local sector_match = temp_item:match("#([A-H])")
+        -- Identify sector from Temp Item (e.g. "Ra'Kaznar shard #A" or "Ra'Kaznar shard E")
+        local sector_match = temp_item:match("#([A-H])") or temp_item:match("([A-H])$")
         local item_sector = sector_match or state.current_sector
         
         if item_type and item_sector and state.sectors[item_sector] then
@@ -151,9 +157,36 @@ windower.register_event('incoming text', function(original, modified, mode)
         end
     end
 
+    -- Capture any line containing a main boss name to log file to help diagnose defeat messages
+    for _, major in pairs(state.boss_list) do
+        if major.type == "main" and clower:find(major.name:lower()) then
+            local f = io.open(windower.addon_path .. 'data/boss_defeat_log.txt', 'a')
+            if f then
+                f:write(string.format("[%s] Mode: %s - %s\n", get_time_string(), tostring(mode), cleaned_line))
+                f:close()
+            end
+            break
+        end
+    end
+
     -- Tracking Boss Defeats
     -- Examples: "The party defeats Aminon." or "Player defeats Aminon."
-    local defeat_target = cleaned_line:lower():match("defeats?%s+the%s+([^%.]+)%.") or cleaned_line:lower():match("defeats?%s+([^%.]+)%.")
+    local defeat_target = clower:match("defeats?%s+the%s+([^%.]+)%.") or clower:match("defeats?%s+([^%.]+)%.")
+    
+    if defeat_target then
+        defeat_target = defeat_target:gsub("^%s*(.-)%s*$", "%1") -- trim whitespace
+    end
+
+    -- Fallback: if line contains boss name and a defeat keyword, or if the regex match wasn't in our list
+    if not defeat_target or not state.boss_list[defeat_target:lower()] then
+        for boss_name, boss_info in pairs(state.boss_list) do
+            if clower:find(boss_name) and (clower:find("defeat") or clower:find("vanquish") or clower:find("falls") or clower:find("destroyed")) then
+                defeat_target = boss_name
+                break
+            end
+        end
+    end
+
     if defeat_target then
         defeat_target = defeat_target:lower()
         if state.boss_list[defeat_target] then
