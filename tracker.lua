@@ -121,10 +121,14 @@ windower.register_event('incoming text', function(original, modified, mode)
 
     -- Tracking Temporary Items (Chests)
     -- e.g., "You obtain the temporary item: Ra'Kaznar shard #G!"
-    local temp_item = clower:match("obtains?%s+the%s+temporary item:%s+([^%.!]+)")
-    if not temp_item then
-        -- Fallback to the old generic regex just in case it doesn't say "obtains the"
-        temp_item = cleaned_line:match("temporary item:%s+([^%.!]+)")
+    local temp_item = nil
+    -- Explicitly ignore "lose" messages so they aren't processed as items
+    if not clower:find("lose%s+the%s+temporary item") then
+        temp_item = cleaned_line:match("[Oo]btains?%s+the%s+temporary item:%s+([^%.!]+)")
+        if not temp_item then
+            -- Fallback to the generic regex just in case, capturing from cleaned_line to preserve case
+            temp_item = cleaned_line:match("temporary item:%s+([^%.!]+)")
+        end
     end
 
     if temp_item then
