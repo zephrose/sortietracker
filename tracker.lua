@@ -105,17 +105,16 @@ windower.register_event('incoming text', function(original, modified, mode)
     end
 
     -- Tracking Old Cases
-    if cleaned_line:lower():find("obtained:.*old case") then
-        local case_name = cleaned_line:match("obtained:.*(Old Case[^%.]*)")
-        if case_name then
-            case_name = case_name:gsub('^%s*(.-)%s*$', '%1'):gsub('[^%w%s%+]', '')
-            if state.cases[case_name] ~= nil then
-                state.cases[case_name] = state.cases[case_name] + 1
-            else
-                state.cases["Old Case"] = state.cases["Old Case"] + 1
-            end
-        else
-            state.cases["Old Case"] = state.cases["Old Case"] + 1
+    if clower:find("obtained:.*old case") or clower:find("obtains.*old case") then
+        local key = "Old Case"
+        if clower:find("old case%s*%+1") then
+            key = "Old Case +1"
+        elseif clower:find("old case%s*%+2") then
+            key = "Old Case +2"
+        end
+        
+        if state.cases[key] ~= nil then
+            state.cases[key] = state.cases[key] + 1
         end
     end
 
